@@ -1,800 +1,1548 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SAC TransformAção - Dashboard</title>
+  <title>SAC TransformAção — Premium Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
 
   <style>
-    :root{
-      --bg:#f4f7fb;
-      --card:#ffffff;
-      --primary:#2563eb;
-      --success:#16a34a;
-      --danger:#dc2626;
-      --warning:#f59e0b;
-      --text:#1e293b;
-      --muted:#64748b;
-      --border:#e2e8f0;
+    /* ============================================================
+       TOKENS
+    ============================================================ */
+    :root {
+      --bg:          #0a0b10;
+      --surface:     #111218;
+      --surface2:    #181924;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(255,140,50,0.25);
+
+      --orange:      #ff8c32;
+      --orange-dim:  rgba(255,140,50,0.15);
+      --orange-glow: rgba(255,140,50,0.08);
+
+      --purple:      #9b5cf6;
+      --purple-dim:  rgba(155,92,246,0.15);
+      --purple-glow: rgba(155,92,246,0.08);
+
+      --blue:        #56cfff;
+      --blue-dim:    rgba(86,207,255,0.15);
+      --blue-glow:   rgba(86,207,255,0.08);
+
+      --red:         #ff4f6a;
+      --red-dim:     rgba(255,79,106,0.15);
+      --green:       #34d399;
+      --green-dim:   rgba(52,211,153,0.15);
+      --yellow:      #fbbf24;
+      --yellow-dim:  rgba(251,191,36,0.15);
+
+      --text:        #e8eaf0;
+      --text-muted:  #6b7280;
+      --text-dim:    #9ca3af;
+
+      --radius:      14px;
+      --radius-sm:   8px;
+      --radius-pill: 999px;
+
+      --font-head:   'Syne', sans-serif;
+      --font-body:   'DM Sans', sans-serif;
+
+      --transition:  0.22s cubic-bezier(.4,0,.2,1);
     }
 
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    body{
-      font-family: Arial, Helvetica, sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      padding:20px;
+    /* animated grid bg */
+    body::before {
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image:
+        linear-gradient(rgba(255,140,50,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,140,50,0.03) 1px, transparent 1px);
+      background-size:48px 48px;
+      pointer-events:none;
+      z-index:0;
     }
 
-    .container{
-      max-width:1400px;
-      margin:0 auto;
+    /* blobs */
+    .blob {
+      position:fixed;
+      border-radius:50%;
+      filter:blur(120px);
+      pointer-events:none;
+      z-index:0;
+      animation:blobFloat 12s ease-in-out infinite alternate;
+    }
+    .blob-1 { width:500px; height:500px; background:rgba(155,92,246,0.12); top:-150px; right:-100px; animation-delay:0s; }
+    .blob-2 { width:400px; height:400px; background:rgba(255,140,50,0.08); bottom:0; left:-120px; animation-delay:-6s; }
+    .blob-3 { width:300px; height:300px; background:rgba(86,207,255,0.07); top:40%; left:50%; animation-delay:-3s; }
+
+    @keyframes blobFloat {
+      from { transform:translate(0,0) scale(1); }
+      to   { transform:translate(30px,20px) scale(1.08); }
     }
 
-    header{
-      margin-bottom:24px;
+    /* ============================================================
+       LAYOUT SHELL
+    ============================================================ */
+    .layout {
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:260px 1fr;
+      min-height:100vh;
     }
 
-    header h1{
-      font-size:32px;
-      color:var(--primary);
-      margin-bottom:8px;
-    }
-
-    header p{
-      color:var(--muted);
-    }
-
-    .status-bar{
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .sidebar {
+      position:sticky;
+      top:0;
+      height:100vh;
       display:flex;
-      flex-wrap:wrap;
+      flex-direction:column;
+      background:var(--surface);
+      border-right:1px solid var(--border);
+      padding:28px 20px;
+      gap:8px;
+      overflow-y:auto;
+    }
+
+    .sidebar-logo {
+      display:flex;
+      align-items:center;
       gap:12px;
-      margin-top:16px;
+      padding:0 8px 24px;
+      border-bottom:1px solid var(--border);
+      margin-bottom:12px;
+    }
+    .sidebar-logo-icon {
+      width:40px; height:40px;
+      border-radius:10px;
+      background:linear-gradient(135deg, var(--orange), var(--purple));
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px;
+      box-shadow:0 0 20px rgba(255,140,50,0.3);
+      flex-shrink:0;
+    }
+    .sidebar-logo-text { font-family:var(--font-head); font-weight:800; font-size:17px; line-height:1.2; }
+    .sidebar-logo-text span { color:var(--orange); }
+
+    .nav-section-label {
+      font-size:10px;
+      font-weight:600;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      color:var(--text-muted);
+      padding:16px 10px 8px;
+    }
+
+    .nav-item {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:11px 14px;
+      border-radius:var(--radius-sm);
+      cursor:pointer;
+      font-size:14px;
+      font-weight:500;
+      color:var(--text-dim);
+      transition:var(--transition);
+      border:1px solid transparent;
+      text-decoration:none;
+    }
+    .nav-item:hover { background:var(--surface2); color:var(--text); border-color:var(--border); }
+    .nav-item.active { background:var(--orange-dim); color:var(--orange); border-color:var(--border-glow); }
+    .nav-item .nav-icon { font-size:18px; width:22px; text-align:center; flex-shrink:0; }
+    .nav-item .nav-badge {
+      margin-left:auto;
+      background:var(--orange);
+      color:#000;
+      font-size:10px;
+      font-weight:700;
+      border-radius:var(--radius-pill);
+      padding:2px 7px;
+    }
+
+    .sidebar-footer {
+      margin-top:auto;
+      border-top:1px solid var(--border);
+      padding-top:20px;
+    }
+
+    .live-dot {
+      display:inline-block;
+      width:8px; height:8px;
+      border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 8px var(--green);
+      animation:pulse 2s ease infinite;
+      margin-right:8px;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.5; transform:scale(0.8); }
+    }
+
+    .sync-info {
+      font-size:12px;
+      color:var(--text-muted);
+      display:flex;
+      align-items:center;
+      padding:10px 14px;
+      background:var(--green-dim);
+      border-radius:var(--radius-sm);
+      border:1px solid rgba(52,211,153,0.2);
+    }
+    .sync-info.error {
+      background:var(--red-dim);
+      border-color:rgba(255,79,106,0.2);
+      color:var(--red);
+    }
+    .sync-info.loading {
+      background:var(--yellow-dim);
+      border-color:rgba(251,191,36,0.2);
+      color:var(--yellow);
+    }
+
+    /* ============================================================
+       MAIN CONTENT
+    ============================================================ */
+    .main {
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      padding:32px 36px;
+      gap:28px;
+    }
+
+    /* ============================================================
+       TOPBAR
+    ============================================================ */
+    .topbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .topbar-left h1 {
+      font-family:var(--font-head);
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:-0.02em;
+    }
+    .topbar-left h1 span { color:var(--orange); }
+    .topbar-left p { font-size:14px; color:var(--text-muted); margin-top:4px; }
+
+    .topbar-actions { display:flex; gap:10px; align-items:center; }
+
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 18px;
+      border-radius:var(--radius-sm);
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      transition:var(--transition);
+      border:none;
+      font-family:var(--font-body);
+    }
+    .btn-primary { background:linear-gradient(135deg,var(--orange),#ff6a00); color:#000; }
+    .btn-primary:hover { opacity:0.88; transform:translateY(-1px); box-shadow:0 8px 24px rgba(255,140,50,0.35); }
+    .btn-ghost { background:var(--surface2); color:var(--text-dim); border:1px solid var(--border); }
+    .btn-ghost:hover { background:var(--surface); color:var(--text); border-color:rgba(255,255,255,0.15); }
+
+    /* ============================================================
+       TABS / CATEGORY FILTER
+    ============================================================ */
+    .tabs-row {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
       align-items:center;
     }
 
-    .status-item{
-      background:var(--card);
-      padding:10px 14px;
-      border-radius:10px;
+    .tab {
+      padding:8px 16px;
+      border-radius:var(--radius-pill);
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
       border:1px solid var(--border);
-      font-size:14px;
+      background:var(--surface);
+      color:var(--text-dim);
+      transition:var(--transition);
+      white-space:nowrap;
+    }
+    .tab:hover { color:var(--text); border-color:rgba(255,255,255,0.18); }
+    .tab.active {
+      background:linear-gradient(135deg,var(--orange-dim),var(--purple-dim));
+      color:var(--orange);
+      border-color:var(--border-glow);
+    }
+    .tab .tab-count {
+      display:inline-block;
+      background:rgba(255,255,255,0.08);
+      border-radius:var(--radius-pill);
+      padding:1px 7px;
+      font-size:11px;
+      margin-left:6px;
     }
 
-    .loading{
-      color:var(--warning);
-      font-weight:bold;
-    }
-
-    .error{
-      color:var(--danger);
-      font-weight:bold;
-    }
-
-    .kpis{
+    /* ============================================================
+       KPI CARDS
+    ============================================================ */
+    .kpi-grid {
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      grid-template-columns:repeat(4,1fr);
       gap:16px;
-      margin:24px 0;
     }
 
-    .card{
-      background:var(--card);
-      border-radius:14px;
-      padding:20px;
+    .kpi-card {
+      background:var(--surface);
       border:1px solid var(--border);
-      box-shadow:0 2px 10px rgba(0,0,0,0.04);
-      transition:0.2s ease;
-    }
-
-    .card:hover{
-      transform:translateY(-2px);
-    }
-
-    .card h3{
-      font-size:14px;
-      color:var(--muted);
-      margin-bottom:12px;
-    }
-
-    .card .value{
-      font-size:32px;
-      font-weight:bold;
-    }
-
-    .controls{
-      background:var(--card);
-      border-radius:14px;
-      padding:18px;
-      border:1px solid var(--border);
-      margin-bottom:20px;
-
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:14px;
-    }
-
-    input, select{
-      width:100%;
-      padding:12px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      font-size:14px;
-      outline:none;
-    }
-
-    input:focus,
-    select:focus{
-      border-color:var(--primary);
-    }
-
-    .chart-container{
-      background:var(--card);
-      border-radius:14px;
-      padding:20px;
-      border:1px solid var(--border);
-      margin-bottom:20px;
-    }
-
-    .chart-title{
-      margin-bottom:20px;
-      font-size:18px;
-      font-weight:bold;
-    }
-
-    .bar-chart{
+      border-radius:var(--radius);
+      padding:22px;
       display:flex;
       flex-direction:column;
-      gap:14px;
+      gap:12px;
+      position:relative;
+      overflow:hidden;
+      transition:var(--transition);
+    }
+    .kpi-card::before {
+      content:'';
+      position:absolute;
+      top:0; left:0; right:0;
+      height:2px;
+      border-radius:2px;
+    }
+    .kpi-card.orange::before { background:linear-gradient(90deg,var(--orange),transparent); }
+    .kpi-card.purple::before { background:linear-gradient(90deg,var(--purple),transparent); }
+    .kpi-card.blue::before   { background:linear-gradient(90deg,var(--blue),transparent); }
+    .kpi-card.red::before    { background:linear-gradient(90deg,var(--red),transparent); }
+
+    .kpi-card:hover { transform:translateY(-3px); border-color:rgba(255,255,255,0.14); }
+
+    .kpi-top { display:flex; align-items:flex-start; justify-content:space-between; }
+    .kpi-icon {
+      width:42px; height:42px;
+      border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px;
+      flex-shrink:0;
+    }
+    .kpi-icon.orange { background:var(--orange-dim); }
+    .kpi-icon.purple { background:var(--purple-dim); }
+    .kpi-icon.blue   { background:var(--blue-dim); }
+    .kpi-icon.red    { background:var(--red-dim); }
+
+    .kpi-trend {
+      font-size:11px;
+      font-weight:600;
+      padding:3px 8px;
+      border-radius:var(--radius-pill);
+    }
+    .kpi-trend.up   { background:var(--green-dim); color:var(--green); }
+    .kpi-trend.down { background:var(--red-dim); color:var(--red); }
+
+    .kpi-value {
+      font-family:var(--font-head);
+      font-size:36px;
+      font-weight:800;
+      line-height:1;
+      letter-spacing:-0.03em;
+    }
+    .kpi-value.orange { color:var(--orange); }
+    .kpi-value.purple { color:var(--purple); }
+    .kpi-value.blue   { color:var(--blue); }
+    .kpi-value.red    { color:var(--red); }
+
+    .kpi-label { font-size:13px; color:var(--text-muted); font-weight:400; }
+
+    /* ============================================================
+       CONTENT GRID (charts + table)
+    ============================================================ */
+    .content-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
     }
 
-    .bar-row{
+    .panel {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      overflow:hidden;
+    }
+    .panel.full { grid-column:1/-1; }
+
+    .panel-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:18px 22px;
+      border-bottom:1px solid var(--border);
+    }
+    .panel-title {
+      font-family:var(--font-head);
+      font-size:15px;
+      font-weight:700;
       display:flex;
       align-items:center;
       gap:10px;
     }
+    .panel-title-dot {
+      width:8px; height:8px;
+      border-radius:50%;
+      flex-shrink:0;
+    }
+    .panel-body { padding:22px; }
 
-    .bar-label{
-      width:160px;
-      font-size:14px;
-      font-weight:bold;
+    /* ============================================================
+       BAR CHART
+    ============================================================ */
+    .bar-chart { display:flex; flex-direction:column; gap:14px; }
+
+    .bar-row { display:flex; align-items:center; gap:12px; }
+
+    .bar-label {
+      width:130px;
+      font-size:13px;
+      font-weight:500;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      color:var(--text-dim);
+      flex-shrink:0;
+    }
+
+    .bar-track {
+      flex:1;
+      height:10px;
+      background:rgba(255,255,255,0.05);
+      border-radius:var(--radius-pill);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .bar-fill {
+      height:100%;
+      border-radius:var(--radius-pill);
+      transition:width 1s cubic-bezier(.4,0,.2,1);
+      position:relative;
+    }
+
+    .bar-count {
+      width:32px;
+      text-align:right;
+      font-size:12px;
+      font-weight:700;
+      flex-shrink:0;
+      color:var(--text-muted);
+    }
+
+    /* ============================================================
+       DONUT CHART (SVG-based)
+    ============================================================ */
+    .donut-wrap {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:20px;
+    }
+    .donut-container { position:relative; width:180px; height:180px; flex-shrink:0; }
+    .donut-container svg { transform:rotate(-90deg); }
+    .donut-center {
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+    .donut-center-value {
+      font-family:var(--font-head);
+      font-size:28px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .donut-center-label {
+      font-size:11px;
+      color:var(--text-muted);
+      font-weight:400;
+    }
+    .donut-legend { display:flex; flex-direction:column; gap:10px; width:100%; }
+    .donut-legend-item { display:flex; align-items:center; gap:10px; font-size:13px; }
+    .donut-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .donut-legend-name { flex:1; color:var(--text-dim); }
+    .donut-legend-val { font-weight:700; color:var(--text); }
+    .donut-legend-pct { font-size:11px; color:var(--text-muted); }
+
+    /* ============================================================
+       FILTERS / CONTROLS
+    ============================================================ */
+    .controls-bar {
+      display:grid;
+      grid-template-columns:1fr 200px 200px 200px;
+      gap:12px;
+      align-items:end;
+    }
+
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .field label { font-size:12px; font-weight:600; color:var(--text-muted); letter-spacing:0.04em; text-transform:uppercase; }
+
+    .field input,
+    .field select {
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:11px 14px;
+      font-size:13px;
+      color:var(--text);
+      font-family:var(--font-body);
+      outline:none;
+      transition:var(--transition);
+      width:100%;
+    }
+    .field input:focus,
+    .field select:focus {
+      border-color:var(--orange);
+      box-shadow:0 0 0 3px var(--orange-glow);
+    }
+    .field select option { background:#1a1b25; }
+
+    /* search icon wrapper */
+    .search-wrap { position:relative; }
+    .search-wrap input { padding-left:38px; }
+    .search-icon {
+      position:absolute;
+      left:12px; top:50%; transform:translateY(-50%);
+      font-size:16px;
+      color:var(--text-muted);
+      pointer-events:none;
+    }
+
+    /* ============================================================
+       DATA TABLE
+    ============================================================ */
+    .table-scroll { overflow-x:auto; }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      min-width:900px;
+      font-size:13px;
+    }
+
+    thead tr {
+      border-bottom:1px solid var(--border);
+    }
+
+    th {
+      padding:12px 16px;
+      text-align:left;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:var(--text-muted);
+      white-space:nowrap;
+      cursor:pointer;
+      user-select:none;
+      transition:var(--transition);
+    }
+    th:hover { color:var(--text); }
+    th.sort-asc::after  { content:' ↑'; color:var(--orange); }
+    th.sort-desc::after { content:' ↓'; color:var(--orange); }
+
+    tbody tr {
+      border-bottom:1px solid var(--border);
+      transition:var(--transition);
+    }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:rgba(255,255,255,0.03); }
+
+    td {
+      padding:14px 16px;
+      color:var(--text-dim);
+      vertical-align:middle;
+    }
+    td.bold { font-weight:600; color:var(--text); }
+
+    /* ============================================================
+       BADGES
+    ============================================================ */
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      padding:4px 10px;
+      border-radius:var(--radius-pill);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:0.03em;
+      white-space:nowrap;
+    }
+    .badge::before { content:''; width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+
+    /* Status */
+    .badge-aberto    { background:rgba(86,207,255,0.12); color:var(--blue); }
+    .badge-aberto::before { background:var(--blue); }
+    .badge-fechado   { background:rgba(52,211,153,0.12); color:var(--green); }
+    .badge-fechado::before { background:var(--green); }
+    .badge-pendente  { background:rgba(251,191,36,0.12); color:var(--yellow); }
+    .badge-pendente::before { background:var(--yellow); }
+    .badge-default   { background:rgba(255,255,255,0.06); color:var(--text-muted); }
+    .badge-default::before { background:var(--text-muted); }
+
+    /* Prioridade */
+    .badge-alta      { background:var(--orange-dim); color:var(--orange); }
+    .badge-alta::before { background:var(--orange); }
+    .badge-critica   { background:var(--red-dim); color:var(--red); }
+    .badge-critica::before { background:var(--red); box-shadow:0 0 6px var(--red); }
+    .badge-media     { background:var(--yellow-dim); color:var(--yellow); }
+    .badge-media::before { background:var(--yellow); }
+    .badge-baixa     { background:var(--green-dim); color:var(--green); }
+    .badge-baixa::before { background:var(--green); }
+
+    /* Categoria */
+    .badge-cat {
+      background:var(--purple-dim);
+      color:var(--purple);
+      border:1px solid rgba(155,92,246,0.2);
+    }
+    .badge-cat::before { background:var(--purple); }
+
+    /* ============================================================
+       PAGINATION
+    ============================================================ */
+    .pagination {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 22px;
+      border-top:1px solid var(--border);
+      font-size:13px;
+      color:var(--text-muted);
+    }
+    .page-btns { display:flex; gap:6px; }
+    .page-btn {
+      width:32px; height:32px;
+      border-radius:var(--radius-sm);
+      border:1px solid var(--border);
+      background:var(--surface2);
+      color:var(--text-dim);
+      cursor:pointer;
+      font-size:13px;
+      display:flex; align-items:center; justify-content:center;
+      transition:var(--transition);
+      font-family:var(--font-body);
+    }
+    .page-btn:hover { border-color:var(--orange); color:var(--orange); }
+    .page-btn.active { background:var(--orange); border-color:var(--orange); color:#000; font-weight:700; }
+    .page-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+    /* ============================================================
+       EMPTY STATE
+    ============================================================ */
+    .empty-state {
+      text-align:center;
+      padding:48px 24px;
+      color:var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size:48px; margin-bottom:12px; display:block; opacity:0.3; }
+    .empty-state p { font-size:14px; }
+
+    /* ============================================================
+       SKELETON LOADER
+    ============================================================ */
+    .skeleton {
+      animation:shimmer 1.6s infinite linear;
+      background:linear-gradient(90deg,var(--surface2) 25%,var(--surface) 50%,var(--surface2) 75%);
+      background-size:400% 100%;
+      border-radius:4px;
+      display:inline-block;
+    }
+    @keyframes shimmer {
+      from { background-position:100% 0; }
+      to   { background-position:-100% 0; }
+    }
+
+    /* ============================================================
+       TIMELINE SPARKLINE (mini horizontal chart)
+    ============================================================ */
+    .sparkline-wrap { overflow:hidden; }
+    .spark-bars {
+      display:flex;
+      align-items:flex-end;
+      gap:3px;
+      height:60px;
+    }
+    .spark-bar {
+      flex:1;
+      border-radius:3px 3px 0 0;
+      transition:height 0.8s cubic-bezier(.4,0,.2,1);
+      position:relative;
+      cursor:pointer;
+    }
+    .spark-bar:hover::after {
+      content:attr(data-tip);
+      position:absolute;
+      bottom:calc(100% + 6px);
+      left:50%; transform:translateX(-50%);
+      background:var(--surface2);
+      color:var(--text);
+      font-size:11px;
+      font-weight:600;
+      padding:4px 8px;
+      border-radius:6px;
+      border:1px solid var(--border);
+      white-space:nowrap;
+      pointer-events:none;
+      z-index:10;
+    }
+    .spark-labels {
+      display:flex;
+      gap:3px;
+      margin-top:6px;
+    }
+    .spark-lbl {
+      flex:1;
+      font-size:9px;
+      color:var(--text-muted);
+      text-align:center;
       overflow:hidden;
       text-overflow:ellipsis;
       white-space:nowrap;
     }
 
-    .bar-wrapper{
-      flex:1;
-      background:#e5e7eb;
-      border-radius:999px;
-      overflow:hidden;
-      height:26px;
-    }
-
-    .bar{
-      height:100%;
-      background:linear-gradient(90deg, #2563eb, #60a5fa);
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    .main-footer {
       display:flex;
       align-items:center;
-      justify-content:flex-end;
-      color:#fff;
+      justify-content:space-between;
       font-size:12px;
-      padding-right:10px;
-      font-weight:bold;
-      min-width:40px;
+      color:var(--text-muted);
+      border-top:1px solid var(--border);
+      padding-top:20px;
     }
 
-    .table-container{
-      background:var(--card);
-      border-radius:14px;
-      border:1px solid var(--border);
-      overflow:hidden;
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width:1200px) {
+      .kpi-grid { grid-template-columns:repeat(2,1fr); }
+      .content-grid { grid-template-columns:1fr; }
     }
-
-    .table-header{
-      padding:18px;
-      border-bottom:1px solid var(--border);
-      font-weight:bold;
-    }
-
-    .table-wrapper{
-      overflow:auto;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:1000px;
-    }
-
-    th, td{
-      padding:14px;
-      text-align:left;
-      border-bottom:1px solid var(--border);
-      font-size:14px;
-    }
-
-    th{
-      background:#f8fafc;
-      position:sticky;
-      top:0;
-      z-index:2;
-    }
-
-    tr:hover{
-      background:#f8fafc;
-    }
-
-    .badge{
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:bold;
-      display:inline-block;
-    }
-
-    .status-aberto{
-      background:#dbeafe;
-      color:#1d4ed8;
-    }
-
-    .status-fechado{
-      background:#dcfce7;
-      color:#166534;
-    }
-
-    .prioridade-alta,
-    .prioridade-crítica,
-    .prioridade-critica{
-      background:#fee2e2;
-      color:#991b1b;
-    }
-
-    footer{
-      margin-top:20px;
-      text-align:center;
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    @media(max-width:768px){
-      .bar-label{
-        width:110px;
+    @media (max-width:900px) {
+      .layout { grid-template-columns:1fr; }
+      .sidebar {
+        position:relative;
+        height:auto;
+        flex-direction:row;
+        flex-wrap:wrap;
+        padding:16px;
+        gap:6px;
       }
-
-      header h1{
-        font-size:24px;
-      }
+      .sidebar-logo { border-bottom:none; padding-bottom:0; margin-bottom:0; }
+      .nav-section-label { display:none; }
+      .main { padding:20px 16px; }
+      .controls-bar { grid-template-columns:1fr 1fr; }
+      .kpi-grid { grid-template-columns:1fr 1fr; }
     }
+    @media (max-width:600px) {
+      .controls-bar { grid-template-columns:1fr; }
+      .kpi-grid { grid-template-columns:1fr; }
+    }
+
+    /* ============================================================
+       FADE-IN ANIMATION ON LOAD
+    ============================================================ */
+    .fade-in {
+      opacity:0;
+      transform:translateY(12px);
+      animation:fadeUp 0.5s ease forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity:1; transform:translateY(0); }
+    }
+    .delay-1 { animation-delay:0.05s; }
+    .delay-2 { animation-delay:0.10s; }
+    .delay-3 { animation-delay:0.15s; }
+    .delay-4 { animation-delay:0.20s; }
+    .delay-5 { animation-delay:0.25s; }
+    .delay-6 { animation-delay:0.30s; }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+  <!-- Atmospheric blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
 
-    <header>
-      <h1>SAC TransformAção</h1>
-      <p>Dashboard didático para análise de atendimentos ao cliente</p>
+  <div class="layout">
 
-      <div class="status-bar">
-        <div class="status-item" id="loadingStatus">
-          Carregando dados...
+    <!-- ======================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="sidebar">
+
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">⚡</div>
+        <div class="sidebar-logo-text">SAC <span>Transform</span>Ação</div>
+      </div>
+
+      <span class="nav-section-label">Navegação</span>
+
+      <a class="nav-item active" onclick="return false;">
+        <span class="nav-icon">📊</span>
+        Dashboard
+        <span class="nav-badge" id="sidebarTotal">0</span>
+      </a>
+
+      <a class="nav-item" onclick="filterCategory('Todos'); setActiveNav(this)">
+        <span class="nav-icon">📋</span>
+        Todos Atendimentos
+      </a>
+
+      <span class="nav-section-label">Categorias</span>
+      <div id="sidebarCats"></div>
+
+      <span class="nav-section-label">Status</span>
+      <a class="nav-item" onclick="filterStatus('Aberto'); setActiveNav(this)">
+        <span class="nav-icon">🔵</span>
+        Abertos
+      </a>
+      <a class="nav-item" onclick="filterStatus('Fechado'); setActiveNav(this)">
+        <span class="nav-icon">🟢</span>
+        Fechados
+      </a>
+
+      <div class="sidebar-footer">
+        <div class="sync-info loading" id="syncStatus">
+          <span class="live-dot"></span>
+          Conectando ao banco de dados...
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ======================================================
+         MAIN
+    ====================================================== -->
+    <main class="main">
+
+      <!-- TOPBAR -->
+      <div class="topbar fade-in">
+        <div class="topbar-left">
+          <h1>Dashboard de <span>Atendimentos</span></h1>
+          <p id="subhead">Carregando dados da planilha…</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost" onclick="carregarDados()">↻ Atualizar</button>
+          <button class="btn btn-primary" onclick="exportCSVFiltrado()">⬇ Exportar</button>
+        </div>
+      </div>
+
+      <!-- CATEGORY TABS -->
+      <div class="tabs-row fade-in delay-1" id="catTabs">
+        <div class="tab active" onclick="filterCategory('Todos'); setActiveTab(this)">
+          Todos <span class="tab-count" id="tabTodo">0</span>
+        </div>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="kpi-grid fade-in delay-2">
+
+        <div class="kpi-card orange">
+          <div class="kpi-top">
+            <div class="kpi-icon orange">📦</div>
+            <span class="kpi-trend up" id="trendTotal">↑ —</span>
+          </div>
+          <div class="kpi-value orange" id="kpiTotal">0</div>
+          <div class="kpi-label">Total de Atendimentos</div>
         </div>
 
-        <div class="status-item">
-          Última atualização:
-          <strong id="lastUpdate">--</strong>
+        <div class="kpi-card blue">
+          <div class="kpi-top">
+            <div class="kpi-icon blue">🔓</div>
+            <span class="kpi-trend down" id="trendAbertos">— em aberto</span>
+          </div>
+          <div class="kpi-value blue" id="kpiAbertos">0</div>
+          <div class="kpi-label">Atendimentos Abertos</div>
         </div>
-      </div>
-    </header>
 
-    <!-- Cards KPI -->
-    <section class="kpis">
+        <div class="kpi-card red">
+          <div class="kpi-top">
+            <div class="kpi-icon red">🚨</div>
+            <span class="kpi-trend down" id="trendCriticos">⚠ críticos</span>
+          </div>
+          <div class="kpi-value red" id="kpiCriticos">0</div>
+          <div class="kpi-label">Prioridade Crítica</div>
+        </div>
 
-      <div class="card">
-        <h3>Total de Atendimentos</h3>
-        <div class="value" id="totalAtendimentos">0</div>
-      </div>
+        <div class="kpi-card purple">
+          <div class="kpi-top">
+            <div class="kpi-icon purple">🏆</div>
+          </div>
+          <div class="kpi-value purple" id="kpiTopProd" style="font-size:18px;line-height:1.3;">—</div>
+          <div class="kpi-label">Produto Mais Atendido</div>
+        </div>
 
-      <div class="card">
-        <h3>Atendimentos Abertos</h3>
-        <div class="value" id="atendimentosAbertos">0</div>
-      </div>
-
-      <div class="card">
-        <h3>Atendimentos Críticos</h3>
-        <div class="value" id="atendimentosCriticos">0</div>
-      </div>
-
-      <div class="card">
-        <h3>Produto com Mais Registros</h3>
-        <div class="value" id="produtoTop" style="font-size:20px;">--</div>
       </div>
 
-    </section>
+      <!-- CHARTS ROW -->
+      <div class="content-grid fade-in delay-3">
 
-    <!-- Filtros -->
-    <section class="controls">
+        <!-- Bar Chart: Produtos -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <div class="panel-title-dot" style="background:var(--orange)"></div>
+              Top Produtos
+            </div>
+            <span style="font-size:12px;color:var(--text-muted)">por volume</span>
+          </div>
+          <div class="panel-body">
+            <div class="bar-chart" id="barChartProdutos"></div>
+          </div>
+        </div>
 
-      <div>
-        <label>Buscar</label>
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Cliente, pedido, produto ou status"
-        />
+        <!-- Donut: Status -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <div class="panel-title-dot" style="background:var(--purple)"></div>
+              Distribuição por Status
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="donut-wrap">
+              <div class="donut-container">
+                <svg id="donutSvg" viewBox="0 0 160 160" width="180" height="180"></svg>
+                <div class="donut-center">
+                  <div class="donut-center-value" id="donutCenterVal">0</div>
+                  <div class="donut-center-label">Total</div>
+                </div>
+              </div>
+              <div class="donut-legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sparkline: Volume por Categoria -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <div class="panel-title-dot" style="background:var(--blue)"></div>
+              Volume por Categoria
+            </div>
+          </div>
+          <div class="panel-body sparkline-wrap">
+            <div class="spark-bars" id="sparkBars"></div>
+            <div class="spark-labels" id="sparkLabels"></div>
+          </div>
+        </div>
+
+        <!-- Bar Chart: Prioridades -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <div class="panel-title-dot" style="background:var(--red)"></div>
+              Distribuição de Prioridades
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="bar-chart" id="barChartPrioridades"></div>
+          </div>
+        </div>
+
       </div>
 
-      <div>
-        <label>Status</label>
-        <select id="statusFilter">
-          <option value="">Todos</option>
-        </select>
+      <!-- FILTERS + TABLE -->
+      <div class="panel full fade-in delay-4">
+
+        <div class="panel-head">
+          <div class="panel-title">
+            <div class="panel-title-dot" style="background:var(--blue)"></div>
+            Lista de Atendimentos
+            <span style="font-size:12px;font-weight:400;color:var(--text-muted)" id="tableCount"></span>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted)">Atualiza a cada 90s</span>
+        </div>
+
+        <!-- Filters -->
+        <div style="padding:16px 22px;border-bottom:1px solid var(--border);">
+          <div class="controls-bar">
+            <div class="field">
+              <label>Pesquisar</label>
+              <div class="search-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Cliente, pedido, produto…"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Categoria</label>
+              <select id="catFilter"><option value="">Todas</option></select>
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select id="statusFilter"><option value="">Todos</option></select>
+            </div>
+            <div class="field">
+              <label>Prioridade</label>
+              <select id="prioFilter"><option value="">Todas</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortBy('ID')"          data-col="ID">ID</th>
+                <th onclick="sortBy('Data_Abertura')" data-col="Data_Abertura">Data</th>
+                <th onclick="sortBy('Numero_Pedido')" data-col="Numero_Pedido">Pedido</th>
+                <th onclick="sortBy('Nome_Cliente')"  data-col="Nome_Cliente">Cliente</th>
+                <th onclick="sortBy('Produto')"       data-col="Produto">Produto</th>
+                <th onclick="sortBy('Categoria')"     data-col="Categoria">Categoria</th>
+                <th onclick="sortBy('Prioridade')"    data-col="Prioridade">Prioridade</th>
+                <th onclick="sortBy('Status')"        data-col="Status">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="8"><div class="empty-state"><span class="empty-icon">⏳</span><p>Carregando dados…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <span id="pageInfo">—</span>
+          <div class="page-btns" id="pageBtns"></div>
+        </div>
+
       </div>
 
-      <div>
-        <label>Prioridade</label>
-        <select id="priorityFilter">
-          <option value="">Todas</option>
-        </select>
+      <!-- FOOTER -->
+      <div class="main-footer fade-in delay-5">
+        <span>SAC TransformAção · Dashboard Premium</span>
+        <span id="lastUpdate">Última atualização: —</span>
       </div>
 
-    </section>
-
-    <!-- Gráfico -->
-    <section class="chart-container">
-
-      <div class="chart-title">
-        Produtos com Mais Atendimentos
-      </div>
-
-      <div class="bar-chart" id="chartContainer"></div>
-
-    </section>
-
-    <!-- Tabela -->
-    <section class="table-container">
-
-      <div class="table-header">
-        Lista de Atendimentos
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Data Abertura</th>
-              <th>Nº Pedido</th>
-              <th>Cliente</th>
-              <th>Produto</th>
-              <th>Categoria</th>
-              <th>Prioridade</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody id="tableBody"></tbody>
-
-        </table>
-      </div>
-
-    </section>
-
-    <footer>
-      Dashboard atualizado automaticamente a cada 90 segundos
-    </footer>
-
+    </main>
   </div>
 
+  <!-- ================================================================
+       JAVASCRIPT
+  ================================================================ -->
   <script>
-    // URL pública do CSV
-    const CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGm3nBLBieUCd0mL6DDW3-QEPZVEDx0y6G71GJoBPZ04YhWUdZ4k7i5Zs9m1APhFAmvawyCC3GX2q5/pub?gid=0&single=true&output=csv";
+    /* ── CONFIG ─────────────────────────────────── */
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGm3nBLBieUCd0mL6DDW3-QEPZVEDx0y6G71GJoBPZ04YhWUdZ4k7i5Zs9m1APhFAmvawyCC3GX2q5/pub?gid=0&single=true&output=csv';
+    const PER_PAGE = 10;
 
-    // Variável principal dos dados
-    let dados = [];
+    /* ── STATE ──────────────────────────────────── */
+    let allData       = [];
+    let filteredData  = [];
+    let currentPage   = 1;
+    let sortCol       = '';
+    let sortDir       = 'asc';
+    let activeCatTab  = 'Todos';
+    let activeStatusF = '';
 
-    // ==============================
-    // Escapa HTML para reduzir XSS
-    // ==============================
-    function escapeHTML(valor) {
-      if (valor === null || valor === undefined) return "";
+    /* ── HELPERS ─────────────────────────────────── */
+    const esc = s => String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
 
-      return String(valor)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+    function norm(s){ return (s||'').toLowerCase().trim(); }
 
-    // =====================================
-    // Atualiza texto da última atualização
-    // =====================================
-    function atualizarHorario() {
-      const agora = new Date();
-
-      document.getElementById("lastUpdate").textContent =
-        agora.toLocaleString("pt-BR");
-    }
-
-    // ==============================
-    // Faz parsing simples do CSV
-    // ==============================
-    function parseCSV(texto) {
-      const linhas = texto.trim().split("\n");
-
-      const cabecalhos = linhas[0]
-        .split(",")
-        .map(h => h.trim());
-
-      return linhas.slice(1).map(linha => {
-
-        const valores = linha.split(",");
-
-        const objeto = {};
-
-        cabecalhos.forEach((cabecalho, index) => {
-          objeto[cabecalho] = (valores[index] || "").trim();
+    /* ── CSV PARSER (handles quoted fields) ──────── */
+    function parseCSV(txt){
+      const lines = txt.trim().split(/\r?\n/);
+      const headers = splitLine(lines[0]);
+      return lines.slice(1)
+        .filter(l => l.trim())
+        .map(l => {
+          const vals = splitLine(l);
+          const obj = {};
+          headers.forEach((h,i) => obj[h.trim()] = (vals[i]||'').trim());
+          return obj;
         });
-
-        return objeto;
-      });
     }
 
-    // ==============================
-    // Carrega CSV
-    // ==============================
-    async function carregarDados() {
+    function splitLine(line){
+      const result = [];
+      let cur = '', inQ = false;
+      for(let i=0;i<line.length;i++){
+        const c = line[i];
+        if(c==='"'){ inQ=!inQ; }
+        else if(c===',' && !inQ){ result.push(cur); cur=''; }
+        else { cur+=c; }
+      }
+      result.push(cur);
+      return result;
+    }
 
-      const statusEl = document.getElementById("loadingStatus");
-
-      try {
-
-        statusEl.innerHTML =
-          '<span class="loading">Carregando dados...</span>';
-
-        const resposta = await fetch(CSV_URL);
-
-        if (!resposta.ok) {
-          throw new Error("Erro ao carregar CSV");
-        }
-
-        const texto = await resposta.text();
-
-        dados = parseCSV(texto);
-
-        preencherFiltros();
-
-        aplicarFiltros();
-
-        atualizarKPIs();
-
-        criarGrafico();
-
-        atualizarHorario();
-
-        statusEl.innerHTML =
-          '<span style="color:green;font-weight:bold;">Dados carregados com sucesso</span>';
-
-      } catch (erro) {
-
-        console.error(erro);
-
-        statusEl.innerHTML =
-          '<span class="error">Erro ao carregar CSV</span>';
+    /* ── LOAD DATA ───────────────────────────────── */
+    async function carregarDados(){
+      setSyncStatus('loading','⏳ Conectando ao Google Sheets…');
+      try{
+        const r = await fetch(CSV_URL + '&_=' + Date.now());
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const txt = await r.text();
+        allData = parseCSV(txt);
+        buildFilters();
+        applyAll();
+        buildCharts();
+        buildSidebarCats();
+        setSyncStatus('ok','Dados sincronizados com sucesso');
+        document.getElementById('lastUpdate').textContent =
+          'Última atualização: ' + new Date().toLocaleTimeString('pt-BR');
+        document.getElementById('subhead').textContent =
+          allData.length + ' registros carregados · atualiza a cada 90s';
+      } catch(e){
+        setSyncStatus('error','Erro ao conectar: ' + e.message);
+        document.getElementById('subhead').textContent = 'Falha ao carregar dados.';
       }
     }
 
-    // ==============================
-    // Preenche filtros dinâmicos
-    // ==============================
-    function preencherFiltros() {
-
-      const statusFilter =
-        document.getElementById("statusFilter");
-
-      const priorityFilter =
-        document.getElementById("priorityFilter");
-
-      const statusSet = new Set();
-      const prioritySet = new Set();
-
-      dados.forEach(item => {
-
-        if(item.Status) {
-          statusSet.add(item.Status);
-        }
-
-        if(item.Prioridade) {
-          prioritySet.add(item.Prioridade);
-        }
-
-      });
-
-      statusFilter.innerHTML =
-        '<option value="">Todos</option>';
-
-      priorityFilter.innerHTML =
-        '<option value="">Todas</option>';
-
-      [...statusSet].sort().forEach(status => {
-
-        statusFilter.innerHTML +=
-          `<option value="${escapeHTML(status)}">${escapeHTML(status)}</option>`;
-
-      });
-
-      [...prioritySet].sort().forEach(prioridade => {
-
-        priorityFilter.innerHTML +=
-          `<option value="${escapeHTML(prioridade)}">${escapeHTML(prioridade)}</option>`;
-
-      });
+    function setSyncStatus(type, msg){
+      const el = document.getElementById('syncStatus');
+      el.className = 'sync-info ' + type;
+      el.innerHTML = '<span class="live-dot"></span>' + esc(msg);
     }
 
-    // ==============================
-    // Atualiza KPIs
-    // ==============================
-    function atualizarKPIs() {
+    /* ── BUILD FILTERS (dropdowns) ───────────────── */
+    function buildFilters(){
+      const cats    = [...new Set(allData.map(d=>d.Categoria).filter(Boolean))].sort();
+      const statuses= [...new Set(allData.map(d=>d.Status).filter(Boolean))].sort();
+      const prios   = [...new Set(allData.map(d=>d.Prioridade).filter(Boolean))].sort();
 
-      const total = dados.length;
-
-      const abertos = dados.filter(item =>
-        (item.Status || "").toLowerCase().includes("aberto")
-      ).length;
-
-      const criticos = dados.filter(item =>
-        (item.Prioridade || "").toLowerCase().includes("cr")
-      ).length;
-
-      const produtos = {};
-
-      dados.forEach(item => {
-
-        const produto = item.Produto || "Não informado";
-
-        produtos[produto] =
-          (produtos[produto] || 0) + 1;
-
-      });
-
-      let produtoTop = "--";
-      let maior = 0;
-
-      Object.entries(produtos).forEach(([produto, quantidade]) => {
-
-        if(quantidade > maior){
-          maior = quantidade;
-          produtoTop = produto;
-        }
-
-      });
-
-      document.getElementById("totalAtendimentos").textContent = total;
-      document.getElementById("atendimentosAbertos").textContent = abertos;
-      document.getElementById("atendimentosCriticos").textContent = criticos;
-      document.getElementById("produtoTop").textContent = produtoTop;
+      populateSelect('catFilter',    cats,    'Todas');
+      populateSelect('statusFilter', statuses,'Todos');
+      populateSelect('prioFilter',   prios,   'Todas');
     }
 
-    // ==============================
-    // Cria gráfico simples
-    // ==============================
-    function criarGrafico() {
+    function populateSelect(id, opts, empty){
+      const el = document.getElementById(id);
+      el.innerHTML = `<option value="">${esc(empty)}</option>`;
+      opts.forEach(o => el.innerHTML += `<option value="${esc(o)}">${esc(o)}</option>`);
+    }
 
-      const container =
-        document.getElementById("chartContainer");
+    /* ── APPLY FILTERS ───────────────────────────── */
+    function applyAll(){
+      const search = norm(document.getElementById('searchInput').value);
+      const cat    = document.getElementById('catFilter').value;
+      const stat   = document.getElementById('statusFilter').value || activeStatusF;
+      const prio   = document.getElementById('prioFilter').value;
 
-      const produtos = {};
-
-      dados.forEach(item => {
-
-        const produto = item.Produto || "Não informado";
-
-        produtos[produto] =
-          (produtos[produto] || 0) + 1;
-
+      filteredData = allData.filter(d => {
+        const haystack = norm([d.Nome_Cliente,d.Numero_Pedido,d.Produto,d.Status,d.Categoria].join(' '));
+        const matchSearch  = !search || haystack.includes(search);
+        const matchCat     = activeCatTab==='Todos' || norm(d.Categoria)===norm(activeCatTab);
+        const matchCatDrop = !cat  || norm(d.Categoria)===norm(cat);
+        const matchStat    = !stat || norm(d.Status)===norm(stat);
+        const matchPrio    = !prio || norm(d.Prioridade)===norm(prio);
+        return matchSearch && matchCat && matchCatDrop && matchStat && matchPrio;
       });
 
-      const ordenados =
-        Object.entries(produtos)
-          .sort((a,b) => b[1] - a[1])
-          .slice(0, 5);
+      if(sortCol){
+        filteredData.sort((a,b)=>{
+          const va = norm(a[sortCol]||''), vb = norm(b[sortCol]||'');
+          return sortDir==='asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        });
+      }
 
-      const maior =
-        ordenados[0] ? ordenados[0][1] : 1;
+      updateKPIs();
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+      updateCatTabCounts();
+      document.getElementById('tableCount').textContent =
+        '— ' + filteredData.length + ' registros';
+      document.getElementById('sidebarTotal').textContent = allData.length;
+    }
 
-      container.innerHTML = "";
+    /* ── KPIs ────────────────────────────────────── */
+    function updateKPIs(){
+      const total    = filteredData.length;
+      const abertos  = filteredData.filter(d=>norm(d.Status).includes('aberto')).length;
+      const criticos = filteredData.filter(d=>norm(d.Prioridade).includes('cr')).length;
 
-      ordenados.forEach(([produto, quantidade]) => {
+      const prodCount = {};
+      filteredData.forEach(d=>{ const p=d.Produto||'?'; prodCount[p]=(prodCount[p]||0)+1; });
+      const topProd = Object.entries(prodCount).sort((a,b)=>b[1]-a[1])[0];
 
-        const porcentagem =
-          (quantidade / maior) * 100;
+      anim('kpiTotal',    total);
+      anim('kpiAbertos',  abertos);
+      anim('kpiCriticos', criticos);
+      document.getElementById('kpiTopProd').textContent = topProd ? topProd[0] : '—';
+      document.getElementById('trendAbertos').textContent =
+        abertos + ' em aberto';
+      document.getElementById('trendCriticos').textContent =
+        criticos + ' críticos';
+      document.getElementById('trendTotal').textContent =
+        '↑ ' + total;
+    }
 
-        container.innerHTML += `
-          <div class="bar-row">
+    function anim(id, target){
+      const el = document.getElementById(id);
+      const start = parseInt(el.textContent)||0;
+      const dur = 600;
+      const t0 = performance.now();
+      function step(now){
+        const p = Math.min((now-t0)/dur,1);
+        el.textContent = Math.round(start + (target-start)*ease(p));
+        if(p<1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    function ease(t){ return t<0.5 ? 2*t*t : -1+(4-2*t)*t; }
 
-            <div class="bar-label">
-              ${escapeHTML(produto)}
-            </div>
+    /* ── CHARTS ──────────────────────────────────── */
+    function buildCharts(){
+      buildBarProdutos();
+      buildDonutStatus();
+      buildSparkCategoria();
+      buildBarPrioridades();
+    }
 
-            <div class="bar-wrapper">
-
-              <div
-                class="bar"
-                style="width:${porcentagem}%"
-              >
-                ${quantidade}
-              </div>
-
-            </div>
-
+    /* Bar: produtos */
+    function buildBarProdutos(){
+      const counts = {};
+      allData.forEach(d=>{ const p=d.Produto||'?'; counts[p]=(counts[p]||0)+1; });
+      const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      const max = top[0]?top[0][1]:1;
+      const colors=['#ff8c32','#9b5cf6','#56cfff','#ff4f6a','#34d399','#fbbf24'];
+      const el = document.getElementById('barChartProdutos');
+      el.innerHTML = top.map(([name,cnt],i)=>`
+        <div class="bar-row">
+          <div class="bar-label" title="${esc(name)}">${esc(name)}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${(cnt/max*100).toFixed(1)}%;background:linear-gradient(90deg,${colors[i%colors.length]},${colors[i%colors.length]}88)"></div>
           </div>
-        `;
+          <div class="bar-count">${cnt}</div>
+        </div>
+      `).join('');
+    }
 
+    /* Donut: status */
+    function buildDonutStatus(){
+      const counts = {};
+      allData.forEach(d=>{ const s=d.Status||'Desconhecido'; counts[s]=(counts[s]||0)+1; });
+      const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+      const total   = allData.length;
+      const colors  = ['#56cfff','#34d399','#fbbf24','#ff4f6a','#9b5cf6','#ff8c32'];
+      const R=70, CX=80, CY=80, gap=2;
+      let offset=0;
+      const circ = 2*Math.PI*R;
+
+      document.getElementById('donutCenterVal').textContent = total;
+
+      const svgPaths = entries.map(([name,cnt],i)=>{
+        const frac = cnt/total;
+        const dash = frac*circ - gap;
+        const path = `<circle cx="${CX}" cy="${CY}" r="${R}"
+          fill="none"
+          stroke="${colors[i%colors.length]}"
+          stroke-width="18"
+          stroke-dasharray="${dash.toFixed(2)} ${(circ-dash+gap).toFixed(2)}"
+          stroke-dashoffset="${-(offset*circ - gap/2).toFixed(2)}"
+          stroke-linecap="round"
+          style="transition:stroke-dasharray 0.8s ease"/>`;
+        offset += frac;
+        return path;
+      }).join('');
+
+      document.getElementById('donutSvg').innerHTML = svgPaths;
+
+      document.getElementById('donutLegend').innerHTML = entries.map(([name,cnt],i)=>`
+        <div class="donut-legend-item">
+          <div class="donut-legend-dot" style="background:${colors[i%colors.length]}"></div>
+          <span class="donut-legend-name">${esc(name)}</span>
+          <span class="donut-legend-val">${cnt}</span>
+          <span class="donut-legend-pct">${((cnt/total)*100).toFixed(0)}%</span>
+        </div>
+      `).join('');
+    }
+
+    /* Sparkline: categorias */
+    function buildSparkCategoria(){
+      const counts = {};
+      allData.forEach(d=>{ const c=d.Categoria||'N/A'; counts[c]=(counts[c]||0)+1; });
+      const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+      const max = entries[0]?entries[0][1]:1;
+      const colors=['#56cfff','#9b5cf6','#ff8c32','#34d399','#ff4f6a','#fbbf24'];
+
+      document.getElementById('sparkBars').innerHTML = entries.map(([name,cnt],i)=>`
+        <div class="spark-bar"
+          style="height:${Math.max((cnt/max*100),6).toFixed(0)}%;background:${colors[i%colors.length]}22;border-top:2px solid ${colors[i%colors.length]}"
+          data-tip="${esc(name)}: ${cnt}"
+          onclick="filterCategory('${esc(name)}');setActiveTabByName('${esc(name)}')"></div>
+      `).join('');
+
+      document.getElementById('sparkLabels').innerHTML = entries.map(([name])=>`
+        <div class="spark-lbl">${esc(name)}</div>
+      `).join('');
+    }
+
+    /* Bar: prioridades */
+    function buildBarPrioridades(){
+      const counts = {};
+      allData.forEach(d=>{ const p=d.Prioridade||'?'; counts[p]=(counts[p]||0)+1; });
+      const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+      const max = entries[0]?entries[0][1]:1;
+      const colorMap = {
+        'crítica':'#ff4f6a','critica':'#ff4f6a',
+        'alta':'#ff8c32','alta':'#ff8c32',
+        'média':'#fbbf24','media':'#fbbf24',
+        'baixa':'#34d399'
+      };
+      const el = document.getElementById('barChartPrioridades');
+      el.innerHTML = entries.map(([name,cnt])=>{
+        const col = colorMap[norm(name)] || '#9b5cf6';
+        return `<div class="bar-row">
+          <div class="bar-label">${esc(name)}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${(cnt/max*100).toFixed(1)}%;background:linear-gradient(90deg,${col},${col}88)"></div>
+          </div>
+          <div class="bar-count">${cnt}</div>
+        </div>`;
+      }).join('');
+    }
+
+    /* ── BUILD SIDEBAR CATEGORIES ────────────────── */
+    function buildSidebarCats(){
+      const cats = [...new Set(allData.map(d=>d.Categoria).filter(Boolean))].sort();
+      const icons = ['🏷','📦','🔧','🚀','💬','📱','🖥','⚙','📝','🎯'];
+      document.getElementById('sidebarCats').innerHTML = cats.map((c,i)=>`
+        <a class="nav-item" onclick="filterCategory('${esc(c)}');setActiveNav(this)">
+          <span class="nav-icon">${icons[i%icons.length]}</span>
+          ${esc(c)}
+        </a>
+      `).join('');
+    }
+
+    /* ── CATEGORY TABS (top) ─────────────────────── */
+    function buildCatTabs(){
+      const cats = [...new Set(allData.map(d=>d.Categoria).filter(Boolean))].sort();
+      const container = document.getElementById('catTabs');
+      const existing = [...container.querySelectorAll('.tab')].slice(1);
+      existing.forEach(e=>e.remove());
+      cats.forEach(c=>{
+        const cnt = allData.filter(d=>norm(d.Categoria)===norm(c)).length;
+        const tab = document.createElement('div');
+        tab.className='tab';
+        tab.innerHTML = esc(c)+`<span class="tab-count">${cnt}</span>`;
+        tab.onclick = ()=>{ filterCategory(c); setActiveTab(tab); };
+        container.appendChild(tab);
       });
     }
 
-    // ==============================
-    // Aplica filtros e busca
-    // ==============================
-    function aplicarFiltros() {
-
-      const busca =
-        document.getElementById("searchInput")
-          .value
-          .toLowerCase();
-
-      const status =
-        document.getElementById("statusFilter")
-          .value
-          .toLowerCase();
-
-      const prioridade =
-        document.getElementById("priorityFilter")
-          .value
-          .toLowerCase();
-
-      const filtrados = dados.filter(item => {
-
-        const texto =
-          `
-            ${item.Nome_Cliente || ""}
-            ${item.Numero_Pedido || ""}
-            ${item.Produto || ""}
-            ${item.Status || ""}
-          `.toLowerCase();
-
-        const matchBusca =
-          texto.includes(busca);
-
-        const matchStatus =
-          !status ||
-          (item.Status || "").toLowerCase() === status;
-
-        const matchPrioridade =
-          !prioridade ||
-          (item.Prioridade || "").toLowerCase() === prioridade;
-
-        return matchBusca &&
-               matchStatus &&
-               matchPrioridade;
-
-      });
-
-      renderizarTabela(filtrados);
+    function updateCatTabCounts(){
+      document.getElementById('tabTodo').textContent =
+        activeCatTab==='Todos' ? filteredData.length : allData.length;
     }
 
-    // ==============================
-    // Renderiza tabela
-    // ==============================
-    function renderizarTabela(lista) {
+    /* ── FILTER ACTIONS ──────────────────────────── */
+    function filterCategory(cat){
+      activeCatTab = cat;
+      activeStatusF = '';
+      document.getElementById('statusFilter').value='';
+      applyAll();
+      buildCharts();
+    }
 
-      const tbody =
-        document.getElementById("tableBody");
+    function filterStatus(s){
+      activeStatusF = s;
+      activeCatTab = 'Todos';
+      document.getElementById('statusFilter').value='';
+      applyAll();
+    }
 
-      tbody.innerHTML = "";
+    function setActiveTab(el){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+    }
 
-      if(lista.length === 0){
+    function setActiveTabByName(name){
+      document.querySelectorAll('.tab').forEach(t=>{
+        if(t.textContent.trim().startsWith(name)) { t.classList.add('active'); }
+        else { t.classList.remove('active'); }
+      });
+    }
 
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="8">
-              Nenhum registro encontrado
-            </td>
-          </tr>
-        `;
+    function setActiveNav(el){
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      el.classList.add('active');
+    }
 
+    /* ── SORT ────────────────────────────────────── */
+    function sortBy(col){
+      if(sortCol===col){ sortDir = sortDir==='asc'?'desc':'asc'; }
+      else { sortCol=col; sortDir='asc'; }
+      document.querySelectorAll('th').forEach(th=>{
+        th.classList.remove('sort-asc','sort-desc');
+        if(th.dataset.col===col) th.classList.add('sort-'+sortDir);
+      });
+      applyAll();
+    }
+
+    /* ── TABLE RENDER ────────────────────────────── */
+    function renderTable(){
+      const start = (currentPage-1)*PER_PAGE;
+      const page  = filteredData.slice(start, start+PER_PAGE);
+      const tbody = document.getElementById('tableBody');
+
+      if(page.length===0){
+        tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state">
+          <span class="empty-icon">🔍</span>
+          <p>Nenhum registro encontrado com esses filtros.</p>
+        </div></td></tr>`;
         return;
       }
 
-      lista.forEach(item => {
-
-        const statusClasse =
-          `status-${(item.Status || "")
-            .toLowerCase()
-            .replace(/\s+/g,"-")}`;
-
-        const prioridadeClasse =
-          `prioridade-${(item.Prioridade || "")
-            .toLowerCase()
-            .replace(/\s+/g,"-")}`;
-
-        tbody.innerHTML += `
-          <tr>
-
-            <td>${escapeHTML(item.ID || "-")}</td>
-
-            <td>
-              ${escapeHTML(item.Data_Abertura || "-")}
-            </td>
-
-            <td>
-              ${escapeHTML(item.Numero_Pedido || "-")}
-            </td>
-
-            <td>
-              ${escapeHTML(item.Nome_Cliente || "-")}
-            </td>
-
-            <td>
-              ${escapeHTML(item.Produto || "-")}
-            </td>
-
-            <td>
-              ${escapeHTML(item.Categoria || "-")}
-            </td>
-
-            <td>
-              <span class="badge ${prioridadeClasse}">
-                ${escapeHTML(item.Prioridade || "-")}
-              </span>
-            </td>
-
-            <td>
-              <span class="badge ${statusClasse}">
-                ${escapeHTML(item.Status || "-")}
-              </span>
-            </td>
-
-          </tr>
-        `;
-
-      });
+      tbody.innerHTML = page.map(d=>`
+        <tr>
+          <td class="bold">${esc(d.ID||'—')}</td>
+          <td>${esc(d.Data_Abertura||'—')}</td>
+          <td>${esc(d.Numero_Pedido||'—')}</td>
+          <td class="bold">${esc(d.Nome_Cliente||'—')}</td>
+          <td>${esc(d.Produto||'—')}</td>
+          <td><span class="badge badge-cat">${esc(d.Categoria||'—')}</span></td>
+          <td>${prioBadge(d.Prioridade)}</td>
+          <td>${statBadge(d.Status)}</td>
+        </tr>
+      `).join('');
     }
 
-    // ==============================
-    // Eventos dos filtros
-    // ==============================
-    document
-      .getElementById("searchInput")
-      .addEventListener("input", aplicarFiltros);
+    function prioBadge(p){
+      const n = norm(p);
+      let cls = 'badge-default';
+      if(n.includes('cr')) cls='badge-critica';
+      else if(n==='alta')  cls='badge-alta';
+      else if(n.includes('dia')) cls='badge-media';
+      else if(n==='baixa') cls='badge-baixa';
+      return `<span class="badge ${cls}">${esc(p||'—')}</span>`;
+    }
 
-    document
-      .getElementById("statusFilter")
-      .addEventListener("change", aplicarFiltros);
+    function statBadge(s){
+      const n = norm(s);
+      let cls='badge-default';
+      if(n==='aberto')   cls='badge-aberto';
+      else if(n==='fechado') cls='badge-fechado';
+      else if(n.includes('pendente')) cls='badge-pendente';
+      return `<span class="badge ${cls}">${esc(s||'—')}</span>`;
+    }
 
-    document
-      .getElementById("priorityFilter")
-      .addEventListener("change", aplicarFiltros);
+    /* ── PAGINATION ──────────────────────────────── */
+    function renderPagination(){
+      const total = filteredData.length;
+      const pages = Math.ceil(total/PER_PAGE)||1;
+      const start = Math.min((currentPage-1)*PER_PAGE+1, total);
+      const end   = Math.min(currentPage*PER_PAGE, total);
 
-    // ==============================
-    // Inicialização
-    // ==============================
-    carregarDados();
+      document.getElementById('pageInfo').textContent =
+        `Exibindo ${start}–${end} de ${total} registros`;
 
-    // Atualiza automaticamente a cada 90 segundos
-    setInterval(carregarDados, 90000);
+      const container = document.getElementById('pageBtns');
+      container.innerHTML='';
 
+      // prev
+      const prev = mkPageBtn('‹');
+      prev.disabled = currentPage===1;
+      prev.onclick=()=>{ currentPage--; renderTable(); renderPagination(); };
+      container.appendChild(prev);
+
+      // numbered
+      const range = pageRange(currentPage, pages);
+      range.forEach(p=>{
+        if(p==='…'){
+          const el=document.createElement('span');
+          el.textContent='…'; el.style.cssText='padding:0 4px;color:var(--text-muted);line-height:32px;';
+          container.appendChild(el);
+        } else {
+          const btn=mkPageBtn(p);
+          if(p===currentPage) btn.classList.add('active');
+          btn.onclick=()=>{ currentPage=p; renderTable(); renderPagination(); };
+          container.appendChild(btn);
+        }
+      });
+
+      // next
+      const next=mkPageBtn('›');
+      next.disabled=currentPage===pages;
+      next.onclick=()=>{ currentPage++; renderTable(); renderPagination(); };
+      container.appendChild(next);
+    }
+
+    function mkPageBtn(label){
+      const b=document.createElement('button');
+      b.className='page-btn'; b.textContent=label;
+      return b;
+    }
+
+    function pageRange(cur,total){
+      if(total<=7) return Array.from({length:total},(_,i)=>i+1);
+      if(cur<=4)   return [1,2,3,4,5,'…',total];
+      if(cur>=total-3) return [1,'…',total-4,total-3,total-2,total-1,total];
+      return [1,'…',cur-1,cur,cur+1,'…',total];
+    }
+
+    /* ── EXPORT ──────────────────────────────────── */
+    function exportCSVFiltrado(){
+      if(!filteredData.length){ alert('Nenhum dado para exportar.'); return; }
+      const cols=['ID','Data_Abertura','Numero_Pedido','Nome_Cliente','Produto','Categoria','Prioridade','Status'];
+      const rows=[cols.join(','),...filteredData.map(d=>cols.map(c=>`"${(d[c]||'').replace(/"/g,'""')}"`).join(','))];
+      const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='sac_export.csv';
+      a.click();
+    }
+
+    /* ── EVENTS ──────────────────────────────────── */
+    ['searchInput','catFilter','statusFilter','prioFilter'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', ()=>{ currentPage=1; applyAll(); });
+      document.getElementById(id).addEventListener('change',()=>{ currentPage=1; applyAll(); });
+    });
+
+    /* ── INIT ────────────────────────────────────── */
+    (async()=>{
+      await carregarDados();
+      buildCatTabs();
+      setInterval(carregarDados, 90000);
+    })();
   </script>
-
 </body>
 </html>
